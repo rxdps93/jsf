@@ -6,14 +6,17 @@
 
 typedef enum
 {
-    JSON_COMMA,
-    JSON_COLON,
-    JSON_OPENBRACKET,
-    JSON_CLOSEBRACKET,
-    JSON_OPENBRACE,
-    JSON_CLOSEBRACE,
-    JSON_QUOTE,
-    JSON_STRING,
+    JSON_COMMA,         // ,
+    JSON_COLON,         // :
+    JSON_OPENBRACKET,   // [
+    JSON_CLOSEBRACKET,  // ]
+    JSON_OPENBRACE,     // {
+    JSON_CLOSEBRACE,    // }
+    JSON_QUOTE,         // "
+    JSON_STRING,        // Any text wrapped in quotes
+    JSON_NUMBER,        // Any digits not wrapped in quotes
+    JSON_BOOLEAN,       // The words true or false not wrapped in quotes         
+    JSON_NULL           // The word null not wrapped in quotes
 } token_type_t;
 
 typedef struct token
@@ -22,7 +25,24 @@ typedef struct token
     char value[8192];
 } token_t;
 
-void json_lexer(char *pipe, int len)
+int is_digit(char c)
+{
+    return (c >= 48) && (c <= 57);
+}
+
+int is_whitespace(char c)
+{
+    for (int i = 0; i < 5; i++)
+    {
+        if (c == JSON_WHITESPACE[i])
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int json_lexer(char *pipe, int len)
 {
     token_t tokens[65536];
     int t = 0;
@@ -70,10 +90,67 @@ void json_lexer(char *pipe, int len)
                 strcpy(token.value, str);
                 break;
             default:
+                if (is_whitespace(c))
+                {
+                    i++;
+                }
+                else if (is_digit(c))
+                {
+                    char num[8192];
+                    int n = 0;
+                    while (i < len && is_digit(pipe[i]))
+                    {
+                        num[n++] = pipe[i++];
+                    }
+                    num[n] = '\0';
+                    token.type = JSON_NUMBER;
+                    strcpy(token.value, num);
+                }
+                else if (c == 't' && (i + 3 < len))
+                {
+                    char val[] = { c, pipe[i + 1], pipe[i + 2], pipe[i + 3], '\0' };
+                    if (strcmp(val, "true") == 0)
+                    {
+                        token.type = JSON_BOOLEAN;
+                        strcpy(token.value, "true");
+                        i += 4;
+                    }
+                }
+                else if (c == 'f' && (i + 4 < len))
+                {
+                    char val[] = { c, pipe[i + 1], pipe[i + 2], pipe[i + 3], pipe[i + 4], '\0' };
+                    if (strcmp(val, "false") == 0)
+                    {
+                        token.type = JSON_BOOLEAN;
+                        strcpy(token.value, "false");
+                        i += 5;
+                    }
+                }
+                else if (c == 'n' && (i + 3 < len))
+                {
+                    char val[] = { c, pipe[i + 1], pipe[i + 2], pipe[i + 3], '\0' };
+                    if (strcmp(val, "null") == 0)
+                    {
+                        token.type = JSON_NULL;
+                        strcpy(token.value, "null");
+                        i += 4;
+                    }
+                }
+                else
+                {
+                    fprintf(stderr, "Unknown or invalid character at index %d. Aborting.\n", i);
+                    return -1;
+                }
                 break;
         }
         tokens[t++] = token;
     }
+
+    for (int q = 0; q < t; q++)
+    {
+        printf("%s\n", tokens[q].value);
+    }
+    return 0;
 }
 
 int main(int argc, char **argv)
@@ -88,7 +165,11 @@ int main(int argc, char **argv)
 
         fprintf(stdout, "piped content:\n%s\n", pipe);
 
-        json_lexer(pipe, i);
+        int result = json_lexer(pipe, i);
+        if (result == -1)
+        {
+            return 1;
+        }
     }
     else
     {
