@@ -3,6 +3,12 @@
 #include <string.h>
 
 #define JSON_WHITESPACE ((const char[]) { ' ', '\t', '\b', '\n', '\r' })
+#define JSON_WS_SPACE       0
+#define JSON_WS_TAB         1
+#define JSON_WS_BACKSPACE   2
+#define JSON_WS_NEWLINE     3
+#define JSON_WS_RETURN      4
+
 #define PIPE_SIZE 256
 #define TOKEN_VALUE_SIZE 64
 #define TOKENS_SIZE 128
@@ -47,9 +53,8 @@ int is_whitespace(char c)
     return 0;
 }
 
-int json_lexer(char *pipe, int len)
+int json_lexer(char *pipe, int len, token_t *tokens)
 {
-    token_t tokens[TOKENS_SIZE];
     int t = 0;
     for (int i = 0; i < len; i++)
     {
@@ -167,6 +172,11 @@ int json_lexer(char *pipe, int len)
     {
         printf("%s\n", tokens[q].value);
     }
+    return t;
+}
+
+int json_formatter(token_t *tokens, int token_count, char *json)
+{
     return 0;
 }
 
@@ -182,11 +192,23 @@ int main(int argc, char **argv)
 
         fprintf(stdout, "piped content:\n%s\nlen: %d\n", pipe, i - 1);
 
-        int result = json_lexer(pipe, i - 1);
+        token_t tokens[TOKENS_SIZE];
+        int result = json_lexer(pipe, i - 1, tokens);
         if (result == -1)
         {
             return 1;
         }
+
+        printf("There are a total of %d tokens\n", result);
+        char json[PIPE_SIZE];
+        result = json_formatter(tokens, result, json);
+
+        if (result == -1)
+        {
+            return 1;
+        }
+
+        printf("%s\n", json);
     }
     else
     {
