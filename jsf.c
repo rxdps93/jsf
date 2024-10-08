@@ -175,8 +175,74 @@ int json_lexer(char *pipe, int len, token_t *tokens)
     return t;
 }
 
-int json_formatter(token_t *tokens, int token_count, char *json)
+int format_from_tokens(token_t *tokens, int token_count, char *json)
 {
+    int j = 0;
+    int v = 0;
+    for (int i = 0; i < token_count; i++)
+    {
+        token_t token = tokens[i];
+        switch (token.type)
+        {
+            case JSON_COMMA:
+                json[j++] = ',';
+                break;
+            case JSON_COLON:
+                json[j++] = ':';
+                break;
+            case JSON_OPENBRACKET:
+                json[j++] = '[';
+                break;
+            case JSON_CLOSEBRACKET:
+                json[j++] = ']';
+                break;
+            case JSON_OPENBRACE:
+                json[j++] = '{';
+                break;
+            case JSON_CLOSEBRACE:
+                json[j++] = '}';
+                break;
+            /*
+            case JSON_QUOTE:
+                json[j++] = "\"";
+                break;
+            */
+            case JSON_STRING:
+                v = 0;
+                json[j++] = '\"';
+                while (token.value[v] != '\0')
+                {
+                    json[j++] = token.value[v++];
+                }
+                json[j++] = '\"';
+                break;
+            case JSON_NUMBER:
+                v = 0;
+                while (token.value[v] != '\0')
+                {
+                    json[j++] = token.value[v++];
+                }
+                break;
+            case JSON_BOOLEAN:
+                v = 0;
+                while (token.value[v] != '\0')
+                {
+                    json[j++] = token.value[v++];
+                }
+                break;
+            case JSON_NULL:
+                v = 0;
+                while (token.value[v] != '\0')
+                {
+                    json[j++] = token.value[v++];
+                }
+                break;
+            default:
+                fprintf(stderr, "Unexpected token at index %d with value %s\n", i, token.value);
+                return -1;
+        }
+    }
+    json[j] = '\0';
     return 0;
 }
 
@@ -201,7 +267,7 @@ int main(int argc, char **argv)
 
         printf("There are a total of %d tokens\n", result);
         char json[PIPE_SIZE];
-        result = json_formatter(tokens, result, json);
+        result = format_from_tokens(tokens, result, json);
 
         if (result == -1)
         {

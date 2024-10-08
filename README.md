@@ -11,9 +11,9 @@ A simple command line utility I'm writing for myself to serve a few purposes:
 ## Task Overview for Rough Completeness
 - [x] Text can be read from `stdin` (e.g. piped in)
 - [x] JSON is ran through a lexer and tokenized
-- [ ] JSON is parsed into objects/arrays
-- [ ] JSON is accurately validated
-- [ ] JSON is formatted and writen to `stdout`
+- [ ] JSON is immediately formatted from tokens without explicitly checking validity
+- [ ] Ability to set a flag (-v) to explicitly check for valid JSON before formatting
+- [ ] JSON is accurately validated to the JSON specification
 
 ## Other TODO Items for Full Compliance (List is WIP)
 - [ ] Negative numbers are supported in the lexer (e.g. -123)
