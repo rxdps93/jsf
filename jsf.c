@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <ctype.h>
 
 #define JSON_WHITESPACE ((const char[]) { ' ', '\t', '\b', '\n', '\r' })
 #define JSON_WS_SPACE       0
@@ -36,9 +37,18 @@ typedef struct token
     char value[TOKEN_VALUE_SIZE];
 } token_t;
 
-int is_digit(char c)
+int is_num_char(char c)
 {
-    return (c >= 48) && (c <= 57);
+    switch (c)
+    {
+        case '.': // for decimals
+        case 'e': // scientific notation
+        case 'E': // scientific notation
+        case '+': // scientific notation
+            return 1;
+        default:
+            return isdigit(c);
+    }
 }
 
 int is_whitespace(char c)
@@ -112,15 +122,23 @@ int json_lexer(char *pipe, int len, token_t *tokens)
                     printf("\tfound whitespace\n");
                     continue;
                 }
-                else if (is_digit(c))
+                else if (isdigit(c))
                 {
                     char num[NUMBER_SIZE];
                     int n = 0;
-                    while (i < len && is_digit(pipe[i]))
+                    while (i < len && is_num_char(pipe[i]))
                     {
                         num[n++] = pipe[i++];
                     }
+                    i--;
                     num[n] = '\0';
+
+                    if (num[0] == '0')
+                    {
+                        fprintf(stderr, "Error: Leading Zero: %s\n", num);
+                        return -1;
+                    }
+
                     token.type = JSON_NUMBER;
                     strcpy(token.value, num);
                     printf("\tnumber token added: %s\n", num);
@@ -132,7 +150,7 @@ int json_lexer(char *pipe, int len, token_t *tokens)
                     {
                         token.type = JSON_BOOLEAN;
                         strcpy(token.value, "true");
-                        i += 4;
+                        i += 3;
                         printf("\tboolean token added: %s\n", val);
                     }
                 }
@@ -143,7 +161,7 @@ int json_lexer(char *pipe, int len, token_t *tokens)
                     {
                         token.type = JSON_BOOLEAN;
                         strcpy(token.value, "false");
-                        i += 5;
+                        i += 4;
                         printf("\tboolean token added: %s\n", val);
                     }
                 }
@@ -154,7 +172,7 @@ int json_lexer(char *pipe, int len, token_t *tokens)
                     {
                         token.type = JSON_NULL;
                         strcpy(token.value, "null");
-                        i += 4;
+                        i += 3;
                         printf("\tnull token added: %s\n", val);
                     }
                 }

@@ -17,9 +17,12 @@ A simple command line utility I'm writing for myself to serve a few purposes:
 
 ## Other TODO Items for Full Compliance (List is WIP)
 - [ ] Negative numbers are supported in the lexer (e.g. -123)
-- [ ] Decimal values are supported in the lexer (e.g. 123.5)
-- [ ] Exponents are supported (e.g. 1e5, 1.25e23, 1.25e+23, incl. capital E)
-- [ ] Leading 0s are accounted for
+- [ ] Validate negative numbers are correctly formatted
+- [x] Decimal values are supported in the lexer (e.g. 123.5)
+- [ ] Validate decimal values are correctly formatted
+- [x] Scientific Notation supported (e.g. 1e5, 1.25e23, 1.25e+23, incl. capital E)
+- [ ] Validate scientific notation is correctly formatted
+- [x] Leading 0s are accounted for
 - [ ] All valid escape sequences are allowed for, both \ and unicode (u... or U...)
 - [ ] Ensure valid unicode encoding (UTF-8, UTF-16, or UTF-32)
 - [ ] Define utility specific max length and depth for input
