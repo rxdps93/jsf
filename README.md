@@ -9,23 +9,34 @@ A simple command line utility I'm writing for myself to serve a few purposes:
 **This may not necessarily follow the JSON specification exactly** This is not intended for distribution or anything; it is a personal project. I would prefer to have it follow the specification completely but make no guarantees. I will, of course, remove this disclaimer if the time comes that this little tool is in full compliance with the JSON spec **and** has the test cases to prove it. Then and only then should anyone bother to rely upon this.
 
 ## Task Overview for Rough Completeness
-- [x] Text can be read from `stdin` (e.g. piped in)
+- [x] Text can be piped in
+- [ ] Text can be passed in through other means (e.g. command line args)
 - [x] JSON is ran through a lexer and tokenized
+- [ ] JSON is ran through a "first-pass" validator regardless of validation flag
 - [ ] JSON is immediately formatted from tokens without explicitly checking validity
 - [ ] Ability to set a flag (-v) to explicitly check for valid JSON before formatting
 - [ ] JSON is accurately validated to the JSON specification
 
 ## Other TODO Items for Full Compliance (List is WIP)
-- [ ] Negative numbers are supported in the lexer (e.g. -123)
+- [x] Negative numbers are supported in the lexer (e.g. -123)
 - [ ] Validate negative numbers are correctly formatted
 - [x] Decimal values are supported in the lexer (e.g. 123.5)
 - [ ] Validate decimal values are correctly formatted
 - [x] Scientific Notation supported (e.g. 1e5, 1.25e23, 1.25e+23, incl. capital E)
 - [ ] Validate scientific notation is correctly formatted
-- [x] Leading 0s are accounted for
+- [ ] Leading 0s are accounted for
 - [ ] All valid escape sequences are allowed for, both \ and unicode (u... or U...)
 - [ ] Ensure valid unicode encoding (UTF-8, UTF-16, or UTF-32)
 - [ ] Define utility specific max length and depth for input
+
+## Notes
+The intended program flow is the following:
+1. Utility receives (presumably) JSON as input
+2. Input string is tokenized without doing validation apart from unknown characters
+3. Tokenized string is ran through a "first-pass" validation to catch low hanging fruit
+4. If a `-v` flag is passed in a comprehensive validation is performed
+5. The resulting string is formatted and *should* be valid JSON
+6. If the flag was not passed the string is formatted and *may not* be valid JSON
 
 For reference:
 https://www.ietf.org/rfc/rfc4627.txt

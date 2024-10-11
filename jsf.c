@@ -10,11 +10,11 @@
 #define JSON_WS_NEWLINE     3
 #define JSON_WS_RETURN      4
 
-#define PIPE_SIZE 256
-#define TOKEN_VALUE_SIZE 64
-#define TOKENS_SIZE 128
-#define STRING_SIZE 64
-#define NUMBER_SIZE 8
+#define PIPE_SIZE 512
+#define TOKEN_VALUE_SIZE 128
+#define TOKENS_SIZE 256
+#define STRING_SIZE 128
+#define NUMBER_SIZE 32
 
 typedef enum
 {
@@ -41,6 +41,7 @@ int is_num_char(char c)
 {
     switch (c)
     {
+        case '-': // for negatives
         case '.': // for decimals
         case 'e': // scientific notation
         case 'E': // scientific notation
@@ -122,7 +123,7 @@ int json_lexer(char *pipe, int len, token_t *tokens)
                     printf("\tfound whitespace\n");
                     continue;
                 }
-                else if (isdigit(c))
+                else if (is_num_char(c))
                 {
                     char num[NUMBER_SIZE];
                     int n = 0;
@@ -132,12 +133,6 @@ int json_lexer(char *pipe, int len, token_t *tokens)
                     }
                     i--;
                     num[n] = '\0';
-
-                    if (num[0] == '0')
-                    {
-                        fprintf(stderr, "Error: Leading Zero: %s\n", num);
-                        return -1;
-                    }
 
                     token.type = JSON_NUMBER;
                     strcpy(token.value, num);
@@ -153,6 +148,11 @@ int json_lexer(char *pipe, int len, token_t *tokens)
                         i += 3;
                         printf("\tboolean token added: %s\n", val);
                     }
+                    else
+                    {
+                        fprintf(stderr, "Unknown value, expected `true` found %s at index %d\n", val, i);
+                        return -1;    
+                    }
                 }
                 else if (c == 'f' && (i + 4 < len))
                 {
@@ -164,6 +164,11 @@ int json_lexer(char *pipe, int len, token_t *tokens)
                         i += 4;
                         printf("\tboolean token added: %s\n", val);
                     }
+                    else
+                    {
+                        fprintf(stderr, "Unknown value, expected `false` found %s at index %d\n", val, i);
+                        return -1;
+                    }
                 }
                 else if (c == 'n' && (i + 3 < len))
                 {
@@ -174,6 +179,11 @@ int json_lexer(char *pipe, int len, token_t *tokens)
                         strcpy(token.value, "null");
                         i += 3;
                         printf("\tnull token added: %s\n", val);
+                    }
+                    else
+                    {
+                        fprintf(stderr, "Unknown value, expected `null` found %s at index %d\n", val, i);
+                        return -1;
                     }
                 }
                 else
@@ -220,11 +230,6 @@ int format_from_tokens(token_t *tokens, int token_count, char *json)
             case JSON_CLOSEBRACE:
                 json[j++] = '}';
                 break;
-            /*
-            case JSON_QUOTE:
-                json[j++] = "\"";
-                break;
-            */
             case JSON_STRING:
                 v = 0;
                 json[j++] = '\"';
@@ -255,6 +260,7 @@ int format_from_tokens(token_t *tokens, int token_count, char *json)
                     json[j++] = token.value[v++];
                 }
                 break;
+            case JSON_QUOTE:
             default:
                 fprintf(stderr, "Unexpected token at index %d with value %s\n", i, token.value);
                 return -1;
@@ -262,6 +268,17 @@ int format_from_tokens(token_t *tokens, int token_count, char *json)
     }
     json[j] = '\0';
     return 0;
+}
+
+int first_pass_validation(char *tokens, int token_count)
+{
+    // check numbers, colons, and commas
+    int is_key = 0;
+    int is_value = 0;
+    for (int i = 0; i < token_count; i++)
+    {
+        // figure out best way to do this
+    }
 }
 
 int main(int argc, char **argv)
